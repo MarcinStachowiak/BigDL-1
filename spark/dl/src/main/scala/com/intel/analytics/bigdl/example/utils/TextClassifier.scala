@@ -231,43 +231,6 @@ class TextClassifier(param: AbstractTextClassificationParams) extends Serializab
     sc.stop()
   }
 
-  /**
-   * Train the text classification model with train and val RDDs
-   */
-  def trainFromData(sc: SparkContext, rdds: Array[RDD[(Array[Array[Float]], Float)]])
-  : Module[Float] = {
-
-    // create rdd from input directory
-    val trainingRDD = rdds(0).map { case (input: Array[Array[Float]], label: Float) =>
-      Sample(
-        featureTensor = Tensor(input.flatten, Array(param.maxSequenceLength, param.embeddingDim))
-          .transpose(1, 2).contiguous(),
-        label = label)
-    }
-
-    val valRDD = rdds(1).map { case (input: Array[Array[Float]], label: Float) =>
-      Sample(
-        featureTensor = Tensor(input.flatten, Array(param.maxSequenceLength, param.embeddingDim))
-          .transpose(1, 2).contiguous(),
-        label = label)
-    }
-
-    // train
-    val optimizer = Optimizer(
-      model = buildModel(classNum),
-      sampleRDD = trainingRDD,
-      criterion = new ClassNLLCriterion[Float](),
-      batchSize = param.batchSize
-    )
-
-    optimizer
-      .setOptimMethod(new Adagrad(learningRate = param.learningRate, learningRateDecay = 0.0002))
-      .setValidation(Trigger.everyEpoch, valRDD, Array(new Top1Accuracy[Float]), param.batchSize)
-      .setEndWhen(Trigger.maxEpoch(1))
-      .optimize()
-  }
-}
-
 
 abstract class AbstractTextClassificationParams extends Serializable {
   def baseDir: String = "./"
