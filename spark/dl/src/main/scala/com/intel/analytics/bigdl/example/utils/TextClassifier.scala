@@ -163,7 +163,6 @@ class TextClassifier(param: AbstractTextClassificationParams) extends Serializab
 
   }
 
-  // TODO: Replace SpatialConv and SpatialMaxPolling with 1D implementation
   /**
    * Return a text classification model with the specific num of
    * class
